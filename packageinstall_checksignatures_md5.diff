@@ -1,0 +1,65 @@
+diff --git a/services/core/java/com/android/server/pm/PackageManagerService.java b/services/core/java/com/android/server/pm/PackageManagerService.java
+index d6b57283..3fcb1a47 100644
+--- a/services/core/java/com/android/server/pm/PackageManagerService.java
++++ b/services/core/java/com/android/server/pm/PackageManagerService.java
+@@ -372,7 +372,7 @@ import java.util.zip.GZIPInputStream;
+  * being modified must be frozen
+  * <li>fooLPr(): the caller must hold {@link #mPackages} for reading
+  * <li>fooLPw(): the caller must hold {@link #mPackages} for writing
+- * </ul>
++ * </ul>scanDirLI
+  * <p>
+  * Because this class is very central to the platform's security; please run all
+  * CTS and unit tests whenever making modifications:
+@@ -390,7 +390,7 @@ public class PackageManagerService extends IPackageManager.Stub
+     static final boolean DEBUG_UPGRADE = false;
+     static final boolean DEBUG_DOMAIN_VERIFICATION = false;
+     private static final boolean DEBUG_BACKUP = false;
+-    private static final boolean DEBUG_INSTALL = false;
++    private static final boolean DEBUG_INSTALL = true;
+     private static final boolean DEBUG_REMOVE = false;
+     private static final boolean DEBUG_BROADCASTS = false;
+     private static final boolean DEBUG_SHOW_INFO = false;
+@@ -18525,7 +18525,7 @@ public class PackageManagerService extends IPackageManager.Stub
+         res.setReturnCode(PackageManager.INSTALL_SUCCEEDED);
+         res.installerPackageName = installerPackageName;
+ 
+-        if (DEBUG_INSTALL) Slog.d(TAG, "installPackageLI: path=" + tmpPackageFile);
++        if (DEBUG_INSTALL) Slog.d(TAG, "installPackageLI: path=" + tmpPackageFile + ", pkg=" + installerPackageName );
+ 
+         // Sanity check
+         if (instantApp && (forwardLocked || onExternal)) {
+@@ -18646,6 +18646,33 @@ public class PackageManagerService extends IPackageManager.Stub
+             return;
+         }
+ 
++        Slog.d(TAG, "pkg=>" + pkg.mSignatures + ", " + pkg.mSigningKeys + ", " + pkg.mCertificates + ", " + args.certificates[0][0].getPublicKey());
++        try {
++            MessageDigest md5 = MessageDigest.getInstance("MD5");
++            String md5String = null;
++            if (pkg.mSignatures != null) {
++                for (Signature s : pkg.mSignatures) {
++                    byte[] tmp = md5.digest(s.toByteArray());
++                    final char hexDigits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
++                    if (tmp != null && tmp.length == 16) {
++                        char str[] = new char[16 * 2];
++                        int k = 0;
++                        for (int i = 0; i < 16; i++) {
++                            byte byte0 = tmp[i];
++                            str[k++] = hexDigits[byte0 >>> 4 & 0xf];
++                            str[k++] = hexDigits[byte0 & 0xf];
++                        }
++                        md5String = new String(str);
++                    } else {
++                        md5String = null;
++                    }
++                }
++            }
++            Slog.d(TAG, "md5=>" + md5.digest() + ", ==>" + md5String);
++        } catch (NoSuchAlgorithmException ne) {
++            ne.printStackTrace();
++        }
++
+         // Get rid of all references to package scan path via parser.
+         pp = null;
+         String oldCodePath = null;
