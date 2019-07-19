@@ -3,12 +3,8 @@
 THREAD=10
 ROOTDIR="$(pwd)"
 TMP_FIFO="/tmp/$.fifo"
-KEY_PROJECT="<project"
-KEY_NAME='name="'
-KEY_PATH='path="'
 BRANCH_PUPLIC="public"
-
-DEFAULT_XML=".repo/manifest.xml"
+DEFAULT_LIST="./repo/project.list"
 
 
 mkfifo "${TMP_FIFO}"
@@ -17,9 +13,7 @@ rm ${TMP_FIFO}
 
 
 needToDo(){
-    name=${1%\"}
-    path=${2%\"}
-    echo "name ->　$name"
+    path=${1}
     echo "path ->  $path"
     cd ${path}
     git checkout $BRANCH_PUPLIC
@@ -36,15 +30,7 @@ do
     read -u6
     {
         echo ${line}
-        if [[ "${line}" == ${KEY_PROJECT}* ]]
-        then
-            name=${line#*${KEY_NAME}}
-            path=${line#*${KEY_PATH}}
-            name_real=${name%${KEY_PATH}*}
-            path_real=${path%/*}
-            needToDo ${name_real} ${path_real}
-
-        fi
+        needToDo ${line}
         echo >&6
     }&
 done < ${DEFAULT_XML}
