@@ -19,16 +19,19 @@ ROOT_DIR=$(pwd)
 patchs=$(ls  ${PATCH_DIR})
 for patch in $(ls ${PATCH_DIR})
 do
-    patch_file=${ROOT_DIR}/$patch
+    patch_file=${PATCH_DIR}/$patch
     echo -e "INFO: now git am ${patch_file}"
-    # cd ${ROOT_DIR}/${SRC_DIR}
-    # git am ${patch_file}
+    cd ${SRC_DIR}
+    git am ${patch_file}
     if [[ $? -ne 0 ]]
     then
+        git am --abort
         echo "######################################"
         echo -e "ERROR: Faild to am ${patch_file}"
         echo "#####################################"
-        git am --abort
-        cd ${ROOT_DIR}
+        break
+    else
+        rm ${patch_file}
     fi
+    cd ${ROOT_DIR}
 done
